@@ -13,4 +13,8 @@ public class Logging implements LogCallback {
   public void error(String errorMessage) {
     log.error(errorMessage);
   }
+
+  public void warn(String warningMessage) {
+    log.warn(warningMessage);
+  }
 }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.sitoolkit.csv.app.infra.cli.CliHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
@@ -41,7 +42,7 @@ class MainTest {
   @Test
   void firstRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertRow(rs, 1, "one", "2020-12-29", "12:30:00", true);
@@ -51,7 +52,7 @@ class MainTest {
   @Test
   void secondRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertTrue(rs.next());
@@ -64,7 +65,7 @@ class MainTest {
   @Test
   void thirdRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertTrue(rs.next());
@@ -83,7 +84,7 @@ class MainTest {
   @Test
   void fourthRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertTrue(rs.next());
@@ -96,7 +97,7 @@ class MainTest {
   @Test
   void fifthRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertTrue(rs.next());
@@ -110,7 +111,7 @@ class MainTest {
   @Test
   void sixthRowTest() throws Exception {
     setupDatabase();
-    executeMain();
+    executeMain(new String[] {"--load"});
     ResultSet rs = executeSelectFromOrder();
     assertTrue(rs.next());
     assertTrue(rs.next());
@@ -132,7 +133,7 @@ class MainTest {
     String connectionPropertiesPath = Paths.get(connectionPropUrl.toURI()).toString();
     Main.main(new String[] {connectionPropertiesPath});
 
-    assertTrue(outContent.toString().contains("usage: java -cp"));
+    assertTrue(outContent.toString().contains("usage: java"));
     System.setOut(originalOut);
   }
 
@@ -142,9 +143,11 @@ class MainTest {
     URL csvLoaderDirUrl = getClass().getClassLoader().getResource("csvloader");
     String csvLoaderDirPath = Paths.get(csvLoaderDirUrl.toURI()).toString();
 
+    CliHelper cli = CliHelper.create(new String[] {"--load"});
+
     assertThrows(
         UncheckedIOException.class,
-        () -> main.execute(new String[] {invalidPath, csvLoaderDirPath}));
+        () -> main.execute(cli, new String[] {invalidPath, csvLoaderDirPath}));
   }
 
   @Test
@@ -154,10 +157,12 @@ class MainTest {
     String connectionPropertiesPath = Paths.get(connectionPropUrl.toURI()).toString();
     String invalidDirPath = "csvLoaderDirPath";
 
+    CliHelper cli = CliHelper.create(new String[] {"--load"});
+
     assertThrows(
         UncheckedIOException.class,
         () -> {
-          main.execute(new String[] {connectionPropertiesPath, invalidDirPath});
+          main.execute(cli, new String[] {connectionPropertiesPath, invalidDirPath});
         });
   }
 
@@ -174,12 +179,14 @@ class MainTest {
     connection.createStatement().executeUpdate(createTable);
   }
 
-  private void executeMain() throws Exception {
+  private void executeMain(String[] args) throws Exception {
     URL connectionPropUrl = getClass().getClassLoader().getResource("connection.properties");
     String connectionPropertiesPath = Paths.get(connectionPropUrl.toURI()).toString();
     URL csvLoaderDirUrl = getClass().getClassLoader().getResource("csvloader");
     String csvLoaderDirPath = Paths.get(csvLoaderDirUrl.toURI()).toString();
-    main.execute(new String[] {connectionPropertiesPath, csvLoaderDirPath});
+
+    CliHelper cli = CliHelper.create(args);
+    main.execute(cli, new String[] {connectionPropertiesPath, csvLoaderDirPath});
   }
 
   private ResultSet executeSelectFromOrder() throws SQLException {
